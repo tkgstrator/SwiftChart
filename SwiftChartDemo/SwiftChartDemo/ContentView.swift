@@ -37,7 +37,7 @@ struct ContentView: View {
     
     private var lineBarChart: some View {
         NavigationView {
-            LineBarChartView(lineBarChartData: chartData.linebarchart)
+            LineBarChartView(lineBarChartData: chartData.linebarchart, caption: { Text("Line Bar Chart") })
                 .frame(width: 300, height: 300, alignment: .center)
                 .navigationTitle("Line Bar Chart")
                 .navigationBarItems(trailing: Button(action: { getRandomValue() }, label: { Image(systemName: "arrow.clockwise") }))
