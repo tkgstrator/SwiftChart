@@ -19,10 +19,12 @@ public class PieChartData<Label: View>: Identifiable, Hashable {
     public var id: UUID = UUID()
     var value: Double?
     var label: Label
+    var color: Color
 
-    public init(value: Double?, @ViewBuilder label: () -> Label) {
+    public init(value: Double?, @ViewBuilder label: () -> Label, color: Color = Color.random) {
         self.value = value
         self.label = label()
+        self.color = color
     }
 }
 
@@ -50,20 +52,35 @@ public class PieChartSlideData<Label: View>: Identifiable {
     var percentage: Double = 0.0
     var label: Label?
     var theta: CGPoint {
-        let angle: CGFloat = CGFloat(startAngle.radians + endAngle.radians)
+        let angle: CGFloat = CGFloat(startAngle.degrees + endAngle.degrees) / 2
         let x: CGFloat = cos(angle / 180 * .pi)
         let y: CGFloat = sin(angle / 180 * .pi)
         return CGPoint(x: x , y: y)
     }
+    var color: Color = .clear
     init() {}
     
     static func generate(data: [PieChartData<Label>]) -> [PieChartSlideData] {
         var slides: [PieChartSlideData<Label>] = []
         var currentAngle: Double = -90
-        var totalValue = data.map({ $0.value ?? 0.0 }).reduce(0.0, +)
+        let totalValue = data.map({ $0.value ?? 0.0 }).reduce(0.0, +)
         
-        for slide in data {
-            var slide = PieChartSlideData<Label>()
+        for data in data {
+            // 値がNilでない場合のみ計算を行う
+            if let value = data.value {
+                if value > 0 {
+                    let slide = PieChartSlideData<Label>()
+                    
+                    // 回転角の計算
+                    slide.color = data.color
+                    slide.label = data.label
+                    slide.percentage = value / totalValue * 100
+                    slide.startAngle = Angle(degrees: currentAngle)
+                    currentAngle += value * 360 / totalValue
+                    slide.endAngle = Angle(degrees: currentAngle)
+                    slides.append(slide)
+                }
+            }
         }
         return slides
     }

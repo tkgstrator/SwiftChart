@@ -28,7 +28,7 @@ struct PieChartSlide<Label: View>: View, Identifiable {
     let geometry: GeometryProxy
     let slide: PieChartSlideData<Label>
     @State var percent: CGFloat = 0.0
-
+    @State var scale: CGFloat = 0.0
     var radius: CGFloat {
         geometry.size.width / 2
     }
@@ -47,24 +47,29 @@ struct PieChartSlide<Label: View>: View, Identifiable {
         return path
     }
     var offset: CGPoint {
-        return CGPoint(x: radius * 0.8 * slide.theta.x, y: radius * 0.8 * slide.theta.y)
+        return CGPoint(x: radius * 0.75 * slide.theta.x, y: radius * 0.75 * slide.theta.y)
     }
     
     var body: some View {
         path
-            .fill(Color.red.opacity(0.5))
+            .fill(slide.color.opacity(0.5))
             .overlay(
                 path
                     .stroke(Color.white, lineWidth: 3)
             )
             .overlay(
-                slide.label
-                    .offset(x: offset.x, y: offset.y), alignment: .center
+                VStack {
+                    Text(String(format: "%.01f%%", slide.percentage))
+                    slide.label
+                }
+                .font(.system(size: 18, weight: .bold, design: .monospaced))
+                .minimumScaleFactor(0.5)
+                .offset(x: offset.x, y: offset.y)
             )
-            .overlay(
-                Circle()
-                    .frame(width: 5, height: 5, alignment: .center)
-                    .offset(x: offset.x, y: offset.y), alignment: .center
+            .scaleEffect(scale)
+            .animation(
+                Animation.spring(response: 0.5, dampingFraction: 0.5, blendDuration: 1)
             )
+            .onAppear { scale = 1.0 }
     }
 }

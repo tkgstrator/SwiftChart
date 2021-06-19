@@ -11,6 +11,12 @@ import SwiftChart
 import SwiftUI
 
 final class ChartModel: ObservableObject {
-    @Published var piechart = [PieChartData(value: 10, label: { Text("AAA") })]
+    @Published var piechart = [
+        PieChartData(value: 0, label: { Text("AAA") }),
+        PieChartData(value: 10, label: { Text("AAA") }),
+        PieChartData(value: 20, label: { Text("AAA") }),
+        PieChartData(value: 30, label: { Text("AAA") }),
+        PieChartData(value: 40, label: { Text("AAA") }),
+    ]
 //    @Published var linebarchart = LineBarChartData(data: [Double]())
 }
