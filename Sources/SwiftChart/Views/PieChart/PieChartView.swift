@@ -7,39 +7,64 @@
 
 import SwiftUI
 
-public struct PieChartView: View {
-    public var pieChartData: PieChartData
+public struct PieChartView<Label: View>: View {
+    public var slides: [PieChartSlideData<Label>]
 
-    public init(pieChartData: PieChartData) {
-        self.pieChartData = pieChartData
+    public init(data: [PieChartData<Label>]) {
+        self.slides = PieChartSlideData.generate(data: data)
     }
     
     public var body: some View {
         GeometryReader { geometry in
-            makePieChart(geometry, slides: pieChartData.data)
-                .frame(width: min(geometry.size.width, geometry.size.height),
-                       height: min(geometry.size.width, geometry.size.height))
-                .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
-                .background(Color.red.opacity(0.3))
+            ForEach(slides) { slide in
+                PieChartSlide(geometry: geometry, slide: slide)
+            }
         }
     }
-    
-    func makePieChart(_ geometry: GeometryProxy, slides: [SlideData]) -> some View {
-        let chartSize = min(geometry.size.width, geometry.size.height)
-        let radius = chartSize / 2
-        let centerX = geometry.size.width / 2
+}
 
-        return ZStack {
-            ForEach(0 ..< slides.count, id: \.self) { index in
-                PieChartSlide(geometry: geometry, slideData: slides[index], index: index)
-            }
-            ForEach(slides) { slide in
-                Text(slide.percentage)
-                    .foregroundColor(Color.white)
-                    .font(.system(size: 20, weight: .bold, design: .monospaced))
-                    .position(CGPoint(x: centerX + slide.titleDeltaX * radius,
-                                      y: centerX + slide.titleDeltaY * radius))
-            }
-        }
+struct PieChartSlide<Label: View>: View, Identifiable {
+    let id: UUID = UUID()
+    let geometry: GeometryProxy
+    let slide: PieChartSlideData<Label>
+    @State var percent: CGFloat = 0.0
+
+    var radius: CGFloat {
+        geometry.size.width / 2
+    }
+    
+    var path: Path {
+        let chartSize = geometry.size.width
+        let radius = chartSize / 2
+
+        var path = Path()
+        path.move(to: CGPoint(x: radius, y: radius))
+        path.addArc(center: CGPoint(x: radius, y: radius),
+                    radius: radius,
+                    startAngle: slide.startAngle,
+                    endAngle: slide.endAngle,
+                    clockwise: false)
+        return path
+    }
+    var offset: CGPoint {
+        return CGPoint(x: radius * 0.8 * slide.theta.x, y: radius * 0.8 * slide.theta.y)
+    }
+    
+    var body: some View {
+        path
+            .fill(Color.red.opacity(0.5))
+            .overlay(
+                path
+                    .stroke(Color.white, lineWidth: 3)
+            )
+            .overlay(
+                slide.label
+                    .offset(x: offset.x, y: offset.y), alignment: .center
+            )
+            .overlay(
+                Circle()
+                    .frame(width: 5, height: 5, alignment: .center)
+                    .offset(x: offset.x, y: offset.y), alignment: .center
+            )
     }
 }
